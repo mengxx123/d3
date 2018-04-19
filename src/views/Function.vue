@@ -1,5 +1,5 @@
 <template>
-    <my-page title="功能结构图">
+    <my-page title="功能结构图" :page="page">
         <div class="code-box">
             <pre id="code" class="ace_editor" style="height100%; min-height:500px"><textarea class="ace_text-input">
     ## 二级标题
@@ -11,15 +11,44 @@
             </textarea></pre>
     </div>
         <div class="preview-box">
-            <svg></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
         </div>
         <textarea class="editor" v-model="content"></textarea>
+        <canvas id="canvas"></canvas>
     </my-page>
 </template>
 
 <script>
     /* eslint-disable */
     const ace = window.ace
+
+    window.toUTF8 = function(str) {
+        if( typeof( str ) !== "string" ) {
+            throw new TypeError("toUTF8 function only accept a string as its parameter.");
+        }
+        var ret = [];
+        var c1, c2, c3;
+        var cc = 0;
+        for( var i = 0, l = str.length; i < l; i++ ) {
+            cc = str.charCodeAt(i);
+            if( cc > 0xFFFF ) { throw new Error("InvalidCharacterError"); }
+            if( cc > 0x80 ) {
+                if( cc < 0x07FF ) {
+                    c1 = String.fromCharCode( ( cc >>>  6 ) | 0xC0 );
+                    c2 = String.fromCharCode( ( cc & 0x3F ) | 0x80 );
+                    ret.push( c1, c2 );
+                } else {
+                    c1 = String.fromCharCode(   ( cc >>> 12 )          | 0xE0 );
+                    c2 = String.fromCharCode( ( ( cc >>>  6 ) & 0x3F ) | 0x80 );
+                    c3 = String.fromCharCode(   ( cc          & 0x3F ) | 0x80 );
+                    ret.push( c1, c2, c3 );
+                }
+            } else {
+                ret.push(str[i]);
+            }
+        }
+        return ret.join('');
+    };
 
     export default {
         data () {
@@ -29,10 +58,7 @@
     * 商品信息管理模块
         * 第1
         * 第2
-            * 2.1
-            * 2.2
     * 第三
-        * 第3
     * 第四`,
                 idIndex: 0,
                 data: {
@@ -69,8 +95,9 @@
                     menu: [
                         {
                             type: 'icon',
-                            icon: 'help',
-                            to: '/help'
+                            icon: 'file_download',
+                            click: this.dowload,
+                            title: '下载'
                         }
                     ]
                 }
@@ -164,6 +191,7 @@
                     .attr('width', 800)
                     .attr('height', 500)
                 console.log('删除所有')
+                this.svg = svg
                 svg.selectAll('*').remove()
 //                svg.selectAll().remove()
                 this._yIndex = 0
@@ -237,6 +265,8 @@
                 svg.append("text")
                     .attr('x', node._x + node._width / 2)
                     .attr("y", node._y + node._height / 2)
+                    .attr("text-anchor", 'middle')
+                    .attr('dominant-baseline', 'middle')
                     .text(node.value)
                 if (node.children) {
                     for (let i = 0; i < node.children.length; i++) {
@@ -281,6 +311,31 @@
                             .attr('stroke-width', 1)
                     }
                 }
+            },
+            dowload() {
+                let html = document.getElementsByTagName('svg')[0].outerHTML
+                // html = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' + html
+                html = window.toUTF8(html)
+                console.log(html)
+
+                let imgSrc = 'data:image/svg+xml;base64,' + btoa(html)
+                let img = new Image()
+                console.log(imgSrc)
+                img.onload = () => {
+                    console.log('onload')
+                    let canvas = document.createElement('CANVAS')
+                    console.log(canvas)
+                    canvas.width = 800
+                    canvas.height = 500
+                    canvas.style.width = 800 + 'px'
+                    canvas.style.height = 500 + 'px'
+                    let myctx = canvas.getContext("2d")
+                    myctx.drawImage(img, 0, 0, 800, 500, 0, 0, 800, 500)
+                    canvas.toBlob(function(blob) {
+                        saveAs(blob, "pretty image.png");
+                    });
+                }
+                img.src = imgSrc
             }
         }
     }
@@ -320,8 +375,8 @@
             /* stroke: #000; */
             /* stroke-width: 1; */
             /* font-size: 20px; */
-            text-anchor: middle;
-            dominant-baseline: middle;
+            /* text-anchor: middle;
+            dominant-baseline: middle; */
     }
 </style>
 
