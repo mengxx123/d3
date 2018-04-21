@@ -14,7 +14,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
         </div>
         <textarea class="editor" v-model="content"></textarea>
-        <canvas id="canvas"></canvas>
+        <canvas id="canvas" style="display: none;position: absolute;top: 0;left: 0;z-index: 10000000;width: 100px;height: 100px;background-color: #09c;"></canvas>
     </my-page>
 </template>
 
@@ -112,6 +112,7 @@
             convert() {
                 this.content = this.editor.getValue()
                 let arr = this.content.split('\n')
+                arr = arr.filter(line => line.replace(/\s/g, '').length)
                 let arr2 = []
                 for (let item of arr) {
                     arr2.push({
@@ -138,7 +139,6 @@
                                 this.maxColumn = item.level
                                 console.log('this.maxColumn', this.maxColumn)
                             }
-                            this.maxRow++
                             stack.push(lastItem)
                             let top = stack[stack.length - 1]
                             item.parent = top.id
@@ -210,8 +210,10 @@
                 this.draw(svg, this.data)
                 // set svg size
                 console.log('设置大小', this.maxRow, this.maxColumn)
-                svg.attr('width', (this.maxColumn + 1) * 180 + 16 *2)
-                    .attr('height', this.maxRow * 100 + 16 * 2)
+                this.docWidth = (this.maxColumn + 1) * (140 + 32) + 16 * 2
+                this.docHeight = this.maxRow * (40 + 16) + 16 * 2
+                svg.attr('width', this.docWidth)
+                    .attr('height', this.docHeight)
             },
             initEditor() {
                 let editor = ace.edit('code')
@@ -221,12 +223,8 @@
                 let language = 'markdown'
                 editor.setTheme('ace/theme/' + theme)
                 editor.session.setMode('ace/mode/' + language)
-
-                // 字体大小
                 editor.setFontSize(18)
-
-                // 设置只读（true时只读，用于展示代码）
-                editor.setReadOnly(false)
+                editor.setAutoScrollEditorIntoView(true)
                 editor.getSession().on('change', () => {
                     this.preview()
                 })
@@ -282,7 +280,7 @@
                     .attr("text-anchor", 'middle')
                     .attr('dominant-baseline', 'middle')
                     .text(node.value)
-                if (node.children) {
+                if (node.children && node.children.length) {
                     for (let i = 0; i < node.children.length; i++) {
                         this.draw(svg, node.children[i])
                         // line
@@ -330,7 +328,6 @@
             },
             dowload() {
                 let html = document.getElementsByTagName('svg')[0].outerHTML
-                // html = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' + html
                 html = window.toUTF8(html)
                 console.log(html)
 
@@ -338,18 +335,25 @@
                 let img = new Image()
                 console.log(imgSrc)
                 img.onload = () => {
-                    console.log('onload')
-                    let canvas = document.createElement('CANVAS')
+                    console.log('onload', this.docWidth, this.docHeight)
+//                    let canvas = document.createElement('CANVAS')
+                    let canvas = document.getElementById('canvas')
                     console.log(canvas)
-                    canvas.width = 800
-                    canvas.height = 500
-                    canvas.style.width = 800 + 'px'
-                    canvas.style.height = 500 + 'px'
+                    canvas.width = this.docWidth
+                    canvas.height = this.docHeight
+                    canvas.style.width = this.docWidth + 'px'
+                    canvas.style.height = this.docHeight + 'px'
                     let myctx = canvas.getContext("2d")
-                    myctx.drawImage(img, 0, 0, 800, 500, 0, 0, 800, 500)
-                    canvas.toBlob(function(blob) {
-                        saveAs(blob, "pretty image.png");
-                    });
+                    myctx.width = this.docWidth
+                    myctx.height = this.docHeight
+
+                    myctx.fillStyle = '#fff'
+                    myctx.fillRect(0, 0, this.docWidth, this.docHeight)
+                    myctx.drawImage(img, 0, 0, this.docWidth, this.docHeight, 0, 0, this.docWidth, this.docHeight)
+                    canvas.toBlob(blob => {
+                        console.log(this.data)
+                        saveAs(blob, this.data.value + '.png')
+                    })
                 }
                 img.src = imgSrc
             }
@@ -386,6 +390,12 @@
     .editor {
         width: 300px;
         height: 300px;
+    }
+    .ace_editor {
+        height: 100%;
+    }
+    .ace_content {
+        height: 100%;
     }
     text {
             /* stroke: #000; */
