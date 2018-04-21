@@ -34,6 +34,8 @@
     * 第三
         * 第3
     * 第四`,
+                maxColumn: 1,
+                maxRow: 0,
                 idIndex: 0,
                 data: {
                     value: '根目录',
@@ -105,6 +107,11 @@
                     } else {
                         let lastItem = arr2[i - 1]
                         if (item.level > lastItem.level) {
+                            if (item.level > this.maxColumn) {
+                                this.maxColumn = item.level
+                                console.log('this.maxColumn', this.maxColumn)
+                            }
+                            this.maxRow++
                             stack.push(lastItem)
                             let top = stack[stack.length - 1]
                             item.parent = top.id
@@ -148,6 +155,7 @@
                             return n
                         }
                     }
+                } else {
                 }
                 return null
             },
@@ -161,15 +169,21 @@
             preview() {
 //                d3.select('body').select('*').remove()
                 let svg = d3.select('svg')
-                    .attr('width', 800)
-                    .attr('height', 500)
+//                    .attr('width', 800)
+//                    .attr('height', 500)
                 console.log('删除所有')
                 svg.selectAll('*').remove()
 //                svg.selectAll().remove()
                 this._yIndex = 0
+                this.maxRow = 0
+                this.maxColumn = 0
                 this.convert()
                 this.calculate(this.data, 0)
                 this.draw(svg, this.data)
+                // set svg size
+                console.log('设置大小', this.maxRow, this.maxColumn)
+                svg.attr('width', (this.maxColumn + 1) * 180 + 16 *2)
+                    .attr('height', this.maxRow * 100 + 16 * 2)
             },
             initEditor() {
                 let editor = ace.edit('code')
@@ -280,6 +294,8 @@
                             .attr('stroke', '#000')
                             .attr('stroke-width', 1)
                     }
+                } else {
+                    this.maxRow++
                 }
             }
         }
