@@ -9,6 +9,9 @@
                 <ui-list-item title="用例图" to="/useCase">
                     <ui-icon slot="left" value="grade"/>
                 </ui-list-item>
+                <ui-list-item title="类图" to="/class">
+                    <ui-icon slot="left" value="grade"/>
+                </ui-list-item>
                 <ui-list-item title="PlantUML 客户端" to="/plantUml">
                     <ui-icon slot="left" value="grade"/>
                 </ui-list-item>
