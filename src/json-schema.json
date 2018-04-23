@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "shape https://www.jsonschemavalidator.net/",
+    "required": [
+      "version"
+    ],
+    "properties": {
+      "version": {
+        "type": "string"
+      },
+      "info": {
+        "type": "string"
+      },
+      "shapes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+              "type": {
+                "type": "string"
+              }
+          }
+        }
+      },
+      "declawed": {
+        "type": "boolean"
+      },
+      "description": {
+        "type": "string"
+      }
+    }
+  }

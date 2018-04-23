@@ -7,6 +7,8 @@ const PlantUml = resolve => require(['@/views/PlantUml'], resolve)
 const PlantUmlHelp = resolve => require(['@/views/PlantUmlHelp'], resolve)
 const ER = resolve => require(['@/views/ER'], resolve)
 const Draw = resolve => require(['@/views/Draw'], resolve)
+const Class = resolve => require(['@/views/Class'], resolve)
+const View = resolve => require(['@/views/View'], resolve)
 const About = resolve => require(['@/views/About'], resolve)
 const Error404 = resolve => require(['@/views/error/Error404'], resolve)
 
@@ -36,6 +38,14 @@ let routes = [
     {
         path: '/draw',
         component: Draw
+    },
+    {
+        path: '/class',
+        component: Class
+    },
+    {
+        path: '/view',
+        component: View
     },
     {
         path: '/about',

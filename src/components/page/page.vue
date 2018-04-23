@@ -9,6 +9,9 @@
                 <ui-list-item title="用例图" to="/useCase">
                     <ui-icon slot="left" value="grade"/>
                 </ui-list-item>
+                <ui-list-item title="类图" to="/class">
+                    <ui-icon slot="left" value="grade"/>
+                </ui-list-item>
                 <ui-list-item title="PlantUML 客户端" to="/plantUml">
                     <ui-icon slot="left" value="grade"/>
                 </ui-list-item>
@@ -16,6 +19,9 @@
                     <ui-icon slot="left" value="grade"/>
                 </ui-list-item>
                 <ui-list-item title="画图" to="/draw">
+                    <ui-icon slot="left" value="grade"/>
+                </ui-list-item>
+                <ui-list-item title="查看" to="/view">
                     <ui-icon slot="left" value="grade"/>
                 </ui-list-item>
                 <ui-list-item title="关于" to="/about">
