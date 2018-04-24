@@ -20,6 +20,7 @@
 
 <script>
     /* eslint-disable */
+    import draw from '../util/svg'
     const ace = window.ace
 
     window.toUTF8 = function(str) {
@@ -109,9 +110,8 @@
             this.init()
         },
         methods: {
-            convert() {
-                this.content = this.editor.getValue()
-                let arr = this.content.split('\n')
+            convert(content) {
+                let arr = content.split('\n')
                 arr = arr.filter(line => line.replace(/\s/g, '').length)
                 let arr2 = []
                 for (let item of arr) {
@@ -137,7 +137,6 @@
                         if (item.level > lastItem.level) {
                             if (item.level > this.maxColumn) {
                                 this.maxColumn = item.level
-                                console.log('this.maxColumn', this.maxColumn)
                             }
                             stack.push(lastItem)
                             let top = stack[stack.length - 1]
@@ -168,8 +167,7 @@
                         }
                     }
                 }
-                this.data = root
-                console.log(this.data)
+                return root
             },
             getNode(node, id) {
                 if (node.id === id) {
@@ -191,25 +189,32 @@
             },
             init() {
                 this.initEditor()
-                this.preview()
+                // this.preview()
             },
             preview() {
-//                d3.select('body').select('*').remove()
                 let svg = d3.select('svg')
-//                    .attr('width', 800)
-//                    .attr('height', 500)
-                console.log('删除所有')
                 this.svg = svg
                 svg.selectAll('*').remove()
-//                svg.selectAll().remove()
                 this._yIndex = 0
                 this.maxRow = 0
                 this.maxColumn = 0
-                this.convert()
+                this.content = this.editor.getValue()
+                this.data = this.convert(this.content)
+                console.log(this.data)
                 this.calculate(this.data, 0)
-                this.draw(svg, this.data)
+
+                let shapes = this._draw(svg, this.data, [])
+                if (!shapes) {
+                    return
+                }
+                let json = {
+                    version: '1.0.0',
+                    shapes: shapes
+                }
+                if (json) {
+                    draw(svg, json)
+                }
                 // set svg size
-                console.log('设置大小', this.maxRow, this.maxColumn)
                 this.docWidth = (this.maxColumn + 1) * (140 + 32) + 16 * 2
                 this.docHeight = this.maxRow * (40 + 16) + 16 * 2
                 svg.attr('width', this.docWidth)
@@ -242,6 +247,9 @@
                 editor.getSession().setUseSoftTabs(true)
             },
             calculate(node, x) {
+                if (!node) {
+                    return
+                }
                 let padding = 16
                 let width = 140
                 let height = 40
@@ -262,27 +270,42 @@
                 }
                 node._x = x * (width + offsetX) + padding
             },
-            draw(svg, node) {
-                if (node.value) { // hack
-                    svg.append('rect')
-                        .attr('x', node._x)
-                        .attr('y', node._y)
-                        .attr("width", node._width)
-                        .attr('height', node._height)
-                        .attr('stroke', '#000')
-                        .attr('stroke-width', 1)
-                        .attr('fill', 'none')
-                        .attr('title', node.value)
+            _draw(svg, node, retArr) {
+                let RECT_STYLE = {
+                    strokeColor: '#000',
+                    strokeWidth: 1,
+                    fillColor: 'none'
                 }
-                svg.append("text")
-                    .attr('x', node._x + node._width / 2)
-                    .attr("y", node._y + node._height / 2)
-                    .attr("text-anchor", 'middle')
-                    .attr('dominant-baseline', 'middle')
-                    .text(node.value)
+                if (!node) {
+                    return
+                }
+                if (node.value) { // hack
+                    retArr.push({
+                        type: 'rect',
+                        x: node._x,
+                        y: node._y,
+                        width: node._width,
+                        height: node._height,
+                        style: RECT_STYLE,
+                        title: node.value
+                    })
+                }
+                retArr.push({
+                    type: 'text',
+                    text: node.value,
+                    x: node._x + node._width / 2,
+                    y: node._y + node._height / 2,
+                    width: node._width,
+                    height: node._height,
+                    style: {
+                        textAnchor: 'middle',
+                        dominantBaseline: 'middle'
+                    }
+                })
+               
                 if (node.children && node.children.length) {
                     for (let i = 0; i < node.children.length; i++) {
-                        this.draw(svg, node.children[i])
+                        this._draw(svg, node.children[i], retArr)
                         // line
                         let pt0 = {
                             x: node._x + node._width,
@@ -300,45 +323,48 @@
                             x: (pt0.x + pt3.x) / 2,
                             y: pt3.y
                         }
-                        svg.append('line')
-                            .attr('x1', pt0.x)
-                            .attr('y1', pt0.y)
-                            .attr('x2', pt1.x)
-                            .attr('y2', pt1.y)
-                            .attr('stroke', '#000')
-                            .attr('stroke-width', 1)
-                        svg.append('line')
-                            .attr('x1', pt1.x)
-                            .attr('y1', pt1.y)
-                            .attr('x2', pt2.x)
-                            .attr('y2', pt2.y)
-                            .attr('stroke', '#000')
-                            .attr('stroke-width', 1)
-                        svg.append('line')
-                            .attr('x1', pt2.x)
-                            .attr('y1', pt2.y)
-                            .attr('x2', pt3.x)
-                            .attr('y2', pt3.y)
-                            .attr('stroke', '#000')
-                            .attr('stroke-width', 1)
+                        let LINE_STYLE = {
+                            strokeColor: '#000',
+                            strokeWidth: 1
+                        }
+                        retArr.push({
+                            type: 'line',
+                            x1: pt0.x,
+                            y1: pt0.y,
+                            x2: pt1.x,
+                            y2: pt1.y,
+                            style: LINE_STYLE
+                        })
+                        retArr.push({
+                            type: 'line',
+                            x1: pt1.x,
+                            y1: pt1.y,
+                            x2: pt2.x,
+                            y2: pt2.y,
+                            style: LINE_STYLE
+                        })
+                        retArr.push({
+                            type: 'line',
+                            x1: pt2.x,
+                            y1: pt2.y,
+                            x2: pt3.x,
+                            y2: pt3.y,
+                            style: LINE_STYLE
+                        })
                     }
                 } else {
                     this.maxRow++
                 }
+                return retArr
             },
             dowload() {
                 let html = document.getElementsByTagName('svg')[0].outerHTML
                 html = window.toUTF8(html)
-                console.log(html)
-
                 let imgSrc = 'data:image/svg+xml;base64,' + btoa(html)
                 let img = new Image()
-                console.log(imgSrc)
                 img.onload = () => {
-                    console.log('onload', this.docWidth, this.docHeight)
 //                    let canvas = document.createElement('CANVAS')
                     let canvas = document.getElementById('canvas')
-                    console.log(canvas)
                     canvas.width = this.docWidth
                     canvas.height = this.docHeight
                     canvas.style.width = this.docWidth + 'px'
@@ -351,7 +377,6 @@
                     myctx.fillRect(0, 0, this.docWidth, this.docHeight)
                     myctx.drawImage(img, 0, 0, this.docWidth, this.docHeight, 0, 0, this.docWidth, this.docHeight)
                     canvas.toBlob(blob => {
-                        console.log(this.data)
                         saveAs(blob, this.data.value + '.png')
                     })
                 }

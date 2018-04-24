@@ -11,29 +11,21 @@
             </textarea></pre>
         </div>
         <div class="preview-box">
-            <svg></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
         </div>
-        <textarea class="editor" v-model="content"></textarea>
+        <textarea class="editor2" v-model="content"></textarea>
     </my-page>
 </template>
 
 <script>
     /* eslint-disable */
+    import draw from '../util/svg'
     const ace = window.ace
 
     export default {
         data () {
             return {
-                content: `
-class User {
-  # getName()
-  + getAddress()
-  + setName()
-  - int age
-  - String password
-}
-`,
-                idIndex: 0,
+                content: '',
                 data: {
                     version: '1.0.0',
                     shapes: [
@@ -44,7 +36,9 @@ class User {
                             width: 200,
                             height: 50,
                             style: {
-                                fillColor: '#f00'
+                                fillColor: '#f00',
+                                strokeColor: '#09c',
+                                strokeWidth: 3
                             }
                         },
                         {
@@ -55,7 +49,23 @@ class User {
                             y2: 100,
                             style: {
                             }
-                        }
+                        },
+                        {
+                            "type": "text",
+                            "text": "第2",
+                            "x": 430,
+                            "y": 148,
+                            "width": 140,
+                            "height": 40,
+                            "style": {
+                                "strokeColor": "#000",
+                                "strokeWidth": 1,
+                                "fillColor": "none",
+                                "title": "第2",
+                                "textAnchor": "middle",
+                                "dominantBaseline": "middle"
+                            }
+                        },
                     ],
                 },
                 page: {
@@ -73,12 +83,16 @@ class User {
             this.init()
         },
         methods: {
-            getId() {
-                return this.idIndex++
-            },
             init() {
                 this.initEditor()
+                this.initWebIntent()
                 this.preview()
+            },
+            initWebIntent() {
+                if (!window.intent) {
+                    return
+                }
+                this.editor.setValue(window.intent.data)
             },
             preview() {
                 let svg = d3.select('svg')
@@ -87,7 +101,16 @@ class User {
                 console.log('删除所有')
                 svg.selectAll('*').remove()
                 this._yIndex = 0
-                this.draw(svg, this.data)
+
+                let content = this.editor.getValue()
+                console.log(content)
+                if (content) {
+                    try {
+                        this.data = JSON.parse(content)
+                        this.draw(svg, this.data)
+                    } catch (e) {
+                    }
+                }
             },
             initEditor() {
                 let editor = ace.edit('code')
@@ -113,23 +136,7 @@ class User {
                 editor.getSession().setUseSoftTabs(true)
             },
             draw(svg, data) {
-                for (let shape of data.shapes) {
-                    if (shape.type === 'rect') {
-                        svg.append('rect')
-                            .attr('x', shape.x)
-                            .attr('y', shape.y)
-                            .attr('width', shape.width)
-                            .attr('height', shape.height)
-                    } else if (shape.type === 'line') {
-                        svg.append('line')
-                            .attr('x1', shape.x1)
-                            .attr('y1', shape.y1)
-                            .attr('x2', shape.x2)
-                            .attr('y2', shape.y2)
-                            .attr('stroke', '#000')
-                            .attr('stroke-width', 1)
-                    }
-                }
+                draw(svg, data)
             }
         }
     }
@@ -161,10 +168,14 @@ class User {
 </style>
 
 <style>
-    .editor {
+    /* .editor2 {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        z-index: 100000;
         width: 300px;
         height: 300px;
-    }
+    } */
     text {
             /* stroke: #000; */
             /* stroke-width: 1; */
