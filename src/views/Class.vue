@@ -1,26 +1,16 @@
 <template>
     <my-page title="类图">
         <div class="code-box">
-            <pre id="code" class="ace_editor" style="height100%; min-height:500px"><textarea class="ace_text-input">
-    ## 二级标题
-    > 引用
-
-    这是内容
-    ### 三级标题
-    **加粗**文字
-            </textarea></pre>
+            <ace-editor v-model="content" />
         </div>
         <div class="preview-box">
             <svg></svg>
         </div>
-        <textarea class="editor" v-model="content"></textarea>
     </my-page>
 </template>
 
 <script>
     /* eslint-disable */
-    const ace = window.ace
-
     export default {
         data () {
             return {
@@ -74,53 +64,8 @@ class User {
                 return this.idIndex++
             },
             convert() {
-//                this.data = {
-//                    actors: [],
-//                    useCases: [],
-//                    links: []
-//                }
-//                this.content = this.editor.getValue()
-//                let arr = this.content.split('\n')
-//                arr = arr.filter(value => {
-//                    return value.length
-//                })
-//                console.log(arr)
-////                console.log(this.data)
-//                for (let item of arr) {
-////                    console.log(item)
-//                    let m = item.match(/([\w\W]+?)\s*(\-+?)\s*\(([\w\W]+?)\)/)
-//                    if (m) {
-//                        console.log('匹配')
-//                        console.log(m)
-//                        let actorName = m[1]
-//                        let line = m[2]
-//                        let useCaseName = m[3]
-//                        let actor = this.getActorByName(actorName)
-//                        if (!actor) {
-//                            actor = {
-//                                id: this.getId(),
-//                                name: actorName
-//                            }
-//                            this.data.actors.push(actor)
-//                        }
-//                        let useCase = this.getUseCaseByName(useCaseName)
-//                        if (!useCase) {
-//                            useCase = {
-//                                id: this.getId(),
-//                                name: useCaseName
-//                            }
-//                            this.data.useCases.push(useCase)
-//                        }
-//                        this.data.links.push({
-//                            type: '',
-//                            from: actor.id,
-//                            to: useCase.id
-//                        })
-//                    }
-//                }
             },
             init() {
-                this.initEditor()
                 this.preview()
             },
             preview() {
@@ -133,28 +78,6 @@ class User {
                 this.convert()
                 this.calculate()
                 this.draw(svg, this.data)
-            },
-            initEditor() {
-                let editor = ace.edit('code')
-                this.editor = editor
-                let theme = 'clouds'
-                let language = 'markdown'
-                editor.setTheme('ace/theme/' + theme)
-                editor.session.setMode('ace/mode/' + language)
-                editor.setFontSize(18)
-                editor.setReadOnly(false)
-                editor.getSession().on('change', () => {
-                    this.preview()
-                })
-                editor.setOption('wrap', 'free')
-                editor.setValue(this.content)
-                editor.setOptions({
-                    enableBasicAutocompletion: true,
-                    enableSnippets: true,
-                    enableLiveAutocompletion: true
-                })
-
-                editor.getSession().setUseSoftTabs(true)
             },
             calculate() {
                 let HEADER_HEIGHT = 40
@@ -212,10 +135,15 @@ class User {
                     svg.append('text')
                         .attr('x', cls._x + 16)
                         .attr("y", cls._y + HEADER_HEIGHT + (i + 0.5) * ATTRIBUTE_HEIGHT)
-//                        .attr("text-anchor", 'middle')
+                       .attr("text-anchor", 'middle')
                         .attr('dominant-baseline', 'middle')
                         .text(attr)
                 }
+            }
+        },
+        watch: {
+            content() {
+                this.preview()
             }
         }
     }
@@ -245,18 +173,3 @@ class User {
         }
     }
 </style>
-
-<style>
-    .editor {
-        width: 300px;
-        height: 300px;
-    }
-    text {
-            /* stroke: #000; */
-            /* stroke-width: 1; */
-            /* font-size: 20px; */
-            /*text-anchor: middle;*/
-            /*dominant-baseline: middle;*/
-    }
-</style>
-

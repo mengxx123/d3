@@ -1,14 +1,7 @@
 <template>
     <my-page title="PlantUml 第三方客户端" :page="page">
         <div class="code-box">
-            <pre id="code" class="ace_editor" style="height100%; min-height:500px"><textarea class="ace_text-input">
-    ## 二级标题
-    > 引用
-
-    这是内容
-    ### 三级标题
-    **加粗**文字
-            </textarea></pre>
+            <ace-editor v-model="content" />
         </div>
         <div class="preview-box">
             <img :src="resultSrc" v-if="resultSrc">
@@ -17,7 +10,6 @@
 </template>
 
 <script>
-    const ace = window.ace
     const plantumlEncoder = require('plantuml-encoder')
 
     export default {
@@ -38,49 +30,20 @@
             }
         },
         mounted() {
-            this.initEditor()
-            this.convert()
-//            this.$http.get('/version').then(
-//                response => {
-//                    let data = response.data
-//                    if (data.code === 200) {
-//                        console.log(data)
-//                        this.version = data.data
-//                    }
-//                },
-//                response => {
-//                    console.log(response)
-//                })
+            this.render()
         },
         methods: {
-            initEditor() {
-                let editor = ace.edit('code')
-                this.editor = editor
-                let theme = 'clouds'
-                let language = 'markdown'
-                editor.setTheme('ace/theme/' + theme)
-                editor.session.setMode('ace/mode/' + language)
-                editor.setFontSize(18)
-                editor.setReadOnly(false)
-                editor.getSession().on('change', () => {
-                    this.convert()
-                })
-                editor.setOption('wrap', 'free')
-                editor.setValue(this.content)
-                editor.setOptions({
-                    enableBasicAutocompletion: true,
-                    enableSnippets: true,
-                    enableLiveAutocompletion: true
-                })
-
-                editor.getSession().setUseSoftTabs(true)
-            },
-            convert() {
-                var encoded = plantumlEncoder.encode(this.editor.getValue())
+            render() {
+                var encoded = plantumlEncoder.encode(this.content)
                 console.log(encoded) // SrJGjLDmibBmICt9oGS0
 
                 var url = 'https://www.plantuml.com/plantuml/svg/' + encoded
                 this.resultSrc = url
+            }
+        },
+        watch: {
+            content() {
+                this.render()
             }
         }
     }

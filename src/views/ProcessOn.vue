@@ -6,7 +6,6 @@
         <div class="preview-box">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
         </div>
-        <textarea class="editor2" v-model="content"></textarea>
     </my-page>
 </template>
 
@@ -76,6 +75,16 @@
         },
         methods: {
             init() {
+                this.$http.get('http://localhost:8082/static/er.pos').then(
+                    response => {
+                        let data = response.data
+                        this.data = data
+                        console.log(data)
+                        // data:image/jpeg;base64,iVBORw0
+                    },
+                    response => {
+                        console.log(response)
+                    })
                 this.initWebIntent()
                 this.preview()
             },
@@ -83,19 +92,19 @@
                 if (!window.intent) {
                     return
                 }
-                this.content = window.intent.data
+                this.editor.setValue(window.intent.data)
             },
             preview() {
                 let svg = d3.select('svg')
                     .attr('width', 800)
                     .attr('height', 800)
-                console.log('删除所有')
                 svg.selectAll('*').remove()
                 this._yIndex = 0
 
-                if (this.content) {
+                let content = this.editor.getValue()
+                if (content) {
                     try {
-                        this.data = JSON.parse(this.content)
+                        this.data = JSON.parse(content)
                         this.draw(svg, this.data)
                     } catch (e) {
                     }
@@ -139,5 +148,20 @@
 </style>
 
 <style>
+    /* .editor2 {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        z-index: 100000;
+        width: 300px;
+        height: 300px;
+    } */
+    text {
+            /* stroke: #000; */
+            /* stroke-width: 1; */
+            /* font-size: 20px; */
+            /*text-anchor: middle;*/
+            /*dominant-baseline: middle;*/
+    }
 </style>
 

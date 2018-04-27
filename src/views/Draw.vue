@@ -1,35 +1,32 @@
 <template>
     <my-page title="画图">
         <div class="code-box">
-            <pre id="code" class="ace_editor" style="height100%; min-height:500px"><textarea class="ace_text-input">
-    ## 二级标题
-    > 引用
-
-    这是内容
-    ### 三级标题
-    **加粗**文字
-            </textarea></pre>
+            <ace-editor v-model="content" />
         </div>
         <div class="preview-box">
             <svg></svg>
         </div>
-        <textarea class="editor" v-model="content"></textarea>
     </my-page>
 </template>
 
 <script>
     /* eslint-disable */
+    import {draw} from '../util/svg'
     const ace = window.ace
 
     export default {
         data () {
             return {
                 content: `
+point 200,200
 line 5 10 100 100
 rect 0 0 100 100
-circle 100 100 0
+circle 100 100 10
+ellipse 300 300 80 20
+text 哈哈哈 200 200
+for num from 1 to 8
+    circle 100 100 num
 `,
-                idIndex: 0,
                 data: {
                     actors: [
                         {
@@ -93,57 +90,83 @@ circle 100 100 0
             this.init()
         },
         methods: {
-            getId() {
-                return this.idIndex++
-            },
-            convert() {
-                this.data = {
-                    actors: [],
-                    useCases: [],
-                    links: []
-                }
-                this.content = this.editor.getValue()
-                let arr = this.content.split('\n')
+            convert(content) {
+                let arr = content.split('\n')
                 arr = arr.filter(value => {
                     return value.length
                 })
-                console.log(arr)
-//                console.log(this.data)
+                let shapes = []
                 for (let item of arr) {
-//                    console.log(item)
-                    let m = item.match(/([\w\W]+?)\s*(\-+?)\s*\(([\w\W]+?)\)/)
-                    if (m) {
-                        console.log('匹配')
-                        console.log(m)
-                        let actorName = m[1]
-                        let line = m[2]
-                        let useCaseName = m[3]
-                        let actor = this.getActorByName(actorName)
-                        if (!actor) {
-                            actor = {
-                                id: this.getId(),
-                                name: actorName
+                    if (item.includes('rect')) {
+                        let arr = item.replace('rect', '').split(/\s+/)
+                        arr = arr.filter(value => value.length)
+                        console.log(arr)
+                        let x = arr[0]
+                        let y = arr[1]
+                        let width = 100
+                        let height = 100
+                        shapes.push({
+                            type: 'rect',
+                            x: arr[0],
+                            y: arr[1],
+                            width: arr[2],
+                            height: arr[3],
+                            style: {
+                                fillColor: 'none',
+                                strokeColor: '#000',
+                                strokeWidth: 1
                             }
-                            this.data.actors.push(actor)
-                        }
-                        let useCase = this.getUseCaseByName(useCaseName)
-                        if (!useCase) {
-                            useCase = {
-                                id: this.getId(),
-                                name: useCaseName
+                        })
+                    }
+
+                    let match
+                    if (match = item.match(/point\s+(\d+)\,\s*(\d+)/)) {
+                        shapes.push({
+                            type: 'circle',
+                            cx: match[1],
+                            cy: match[2],
+                            r: 2,
+                            style: {
+                                fillColor: '#000',
+                                strokeColor: '#000',
+                                strokeWidth: 1
                             }
-                            this.data.useCases.push(useCase)
-                        }
-                        this.data.links.push({
-                            type: '',
-                            from: actor.id,
-                            to: useCase.id
+                        })
+                    }
+                    if (match = item.match(/line\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/)) {
+                        shapes.push({
+                            type: 'line',
+                            x1: match[1],
+                            y1: match[2],
+                            x2: match[3],
+                            y2: match[4],
+                            style: {
+                                fillColor: '#000',
+                                strokeColor: '#000',
+                                strokeWidth: 1
+                            }
+                        })
+                    }
+                    if (match = item.match(/circle\s+(\d+)\s+(\d+)\s+(\d+)/)) {
+                        shapes.push({
+                            type: 'circle',
+                            cx: match[1],
+                            cy: match[2],
+                            r: match[3],
+                            style: {
+                                fillColor: 'none',
+                                strokeColor: '#000',
+                                strokeWidth: 1
+                            }
                         })
                     }
                 }
+                return {
+                    version: '1.0.0',
+                    shapes: shapes
+                }
             },
             init() {
-                this.initEditor()
                 this.preview()
             },
             preview() {
@@ -153,184 +176,18 @@ circle 100 100 0
                 console.log('删除所有')
                 svg.selectAll('*').remove()
                 this._yIndex = 0
-                this.convert()
-                this.calculate()
-                this.draw(svg, this.data)
-            },
-            initEditor() {
-                let editor = ace.edit('code')
-                this.editor = editor
-                let theme = 'clouds'
-                let language = 'markdown'
-                editor.setTheme('ace/theme/' + theme)
-                editor.session.setMode('ace/mode/' + language)
-                editor.setFontSize(18)
-                editor.setReadOnly(false)
-                editor.getSession().on('change', () => {
-                    this.preview()
-                })
-                editor.setOption('wrap', 'free')
-                editor.setValue(this.content)
-                editor.setOptions({
-                    enableBasicAutocompletion: true,
-                    enableSnippets: true,
-                    enableLiveAutocompletion: true
-                })
-
-                editor.getSession().setUseSoftTabs(true)
-            },
-            calculate() {
-                let max = Math.max(this.data.actors.length, this.data.useCases.length)
-                let height = max * 200
-                length = this.data.actors.length
-                for (let i = 0; i < this.data.actors.length; i++) {
-                    let actor = this.data.actors[i]
-                    actor._x = 50
-                    actor._y = height / (length + 1) * (i + 1)
+                let content = this.editor.getValue()
+                try {
+                    let json = this.convert(content)
+                    draw(svg, json)
+                } catch (e) {
+                    console.error(e)
                 }
-                length = this.data.useCases.length
-                for (let i = 0; i < this.data.useCases.length; i++) {
-                    let useCase = this.data.useCases[i]
-                    useCase._x = 350
-                    useCase._y = height / (length + 1) * (i + 1)
-                }
-            },
-            calculate2() {
-                let max = Math.max(this.data.actors.length, this.data.useCases.length)
-                let width = max * 150
-                let length
-                length = this.data.actors.length
-                for (let i = 0; i < this.data.actors.length; i++) {
-                    let actor = this.data.actors[i]
-                    actor._x = width / (length + 1) * (i + 1)
-                    actor._y = 100
-                }
-                length = this.data.useCases.length
-                for (let i = 0; i < this.data.useCases.length; i++) {
-                    let useCase = this.data.useCases[i]
-                    useCase._x = width / (length + 1) * (i + 1)
-                    useCase._y = 300
-                }
-            },
-            draw(svg, node) {
-                for (let i = 0; i < this.data.actors.length; i++) {
-                    let actor = this.data.actors[i]
-                    this.drawActor(svg, actor.name, actor._x, actor._y)
-                }
-                for (let i = 0; i < this.data.useCases.length; i++) {
-                    let useCase = this.data.useCases[i]
-                    this.drawUseCase(svg, useCase.name, useCase._x, useCase._y)
-                }
-                for (let i = 0; i < this.data.links.length; i++) {
-                    let link = this.data.links[i]
-                    this.drawLink(svg, link)
-                }
-            },
-            drawLink(svg, link) {
-                let actor = this.getNode(link.from)
-                let useCase = this.getNode(link.to)
-                svg.append('line')
-                    .attr('x1', actor._x + 30)
-                    .attr('y1', actor._y)
-                    .attr('x2', useCase._x - 60)
-                    .attr('y2', useCase._y)
-                    .attr('stroke', '#000')
-                    .attr('stroke-width', 1)
-            },
-            drawLink2(svg, link) {
-                let actor = this.getNode(link.from)
-                let useCase = this.getNode(link.to)
-                svg.append('line')
-                    .attr('x1', actor._x)
-                    .attr('y1', actor._y + 80)
-                    .attr('x2', useCase._x)
-                    .attr('y2', useCase._y - 20)
-                    .attr('stroke', '#000')
-                    .attr('stroke-width', 1)
-            },
-            getNode(id) {
-                for (let actor of this.data.actors) {
-                    if (actor.id === id) {
-                        return actor
-                    }
-                }
-                for (let useCase of this.data.useCases) {
-                    if (useCase.id === id) {
-                        return useCase
-                    }
-                }
-                return null
-            },
-            getActorByName(name) {
-                for (let actor of this.data.actors) {
-                    if (actor.name === name) {
-                        return actor
-                    }
-                }
-                return null
-            },
-            getUseCaseByName(name) {
-                for (let useCase of this.data.useCases) {
-                    if (useCase.name === name) {
-                        return useCase
-                    }
-                }
-                return null
-            },
-            drawUseCase(svg, name, x, y) {
-                svg.append('ellipse')
-                    .attr('cx', x)
-                    .attr('cy', y)
-                    .attr('rx', 50)
-                    .attr('ry', 20)
-                    .attr('stroke', '#000')
-                    .attr('stroke-width', 1)
-                    .attr('fill', 'none')
-                svg.append('text')
-                    .attr('x', x)
-                    .attr("y", y)
-                    .text(name)
-            },
-            drawActor(svg, name, x, y) {
-                svg.append('circle')
-                    .attr('cx', x)
-                    .attr('cy', y - 32)
-                    .attr('r', 16)
-                    .attr('stroke', '#000')
-                    .attr('stroke-width', 1)
-                    .attr('fill', 'none')
-                svg.append('line')
-                    .attr('x1', x - 16)
-                    .attr('y1', y)
-                    .attr('x2', x + 16)
-                    .attr('y2', y)
-                    .attr('stroke', '#000')
-                    .attr('stroke-width', 1)
-                svg.append('line')
-                    .attr('x1', x)
-                    .attr('y1', y + 16)
-                    .attr('x2', x  -16)
-                    .attr('y2', y + 32)
-                    .attr('stroke', '#000')
-                    .attr('stroke-width', 1)
-                svg.append('line')
-                    .attr('x1', x)
-                    .attr('y1', y - 16)
-                    .attr('x2', x)
-                    .attr('y2', y + 16)
-                    .attr('stroke', '#000')
-                    .attr('stroke-width', 1)
-                svg.append('line')
-                    .attr('x1', x)
-                    .attr('y1', y + 16)
-                    .attr('x2', x + 16)
-                    .attr('y2', y + 32)
-                    .attr('stroke', '#000')
-                    .attr('stroke-width', 1)
-                svg.append('text')
-                    .attr('x', x)
-                    .attr("y", y + 64)
-                    .text(name)
+            }
+        },
+        watch: {
+            content() {
+                this.preview()
             }
         }
     }
@@ -356,7 +213,7 @@ circle 100 100 0
         background-color: #fff;
         overflow: auto;
         svg {
-            /*border: 1px solid #999;*/
+            border: 1px solid #999;
         }
     }
 </style>

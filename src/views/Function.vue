@@ -1,15 +1,8 @@
 <template>
     <my-page title="功能结构图" :page="page">
         <div class="code-box">
-            <pre id="code" class="ace_editor" style="height100%; min-height:500px"><textarea class="ace_text-input">
-    ## 二级标题
-    > 引用
-
-    这是内容
-    ### 三级标题
-    **加粗**文字
-            </textarea></pre>
-    </div>
+            <ace-editor v-model="content" />
+        </div>
         <div class="preview-box">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
         </div>
@@ -20,50 +13,20 @@
 
 <script>
     /* eslint-disable */
-    import draw from '../util/svg'
-    const ace = window.ace
-
-    window.toUTF8 = function(str) {
-        if( typeof( str ) !== "string" ) {
-            throw new TypeError("toUTF8 function only accept a string as its parameter.");
-        }
-        var ret = [];
-        var c1, c2, c3;
-        var cc = 0;
-        for( var i = 0, l = str.length; i < l; i++ ) {
-            cc = str.charCodeAt(i);
-            if( cc > 0xFFFF ) { throw new Error("InvalidCharacterError"); }
-            if( cc > 0x80 ) {
-                if( cc < 0x07FF ) {
-                    c1 = String.fromCharCode( ( cc >>>  6 ) | 0xC0 );
-                    c2 = String.fromCharCode( ( cc & 0x3F ) | 0x80 );
-                    ret.push( c1, c2 );
-                } else {
-                    c1 = String.fromCharCode(   ( cc >>> 12 )          | 0xE0 );
-                    c2 = String.fromCharCode( ( ( cc >>>  6 ) & 0x3F ) | 0x80 );
-                    c3 = String.fromCharCode(   ( cc          & 0x3F ) | 0x80 );
-                    ret.push( c1, c2, c3 );
-                }
-            } else {
-                ret.push(str[i]);
-            }
-        }
-        return ret.join('');
-    };
+    import funtionDiagram from '../util/svg/function'
+    import {draw, download} from '../util/svg'
 
     export default {
         data () {
             return {
+                asd: '',
                 content: `* 根目录
-    * 第一
-    * 商品信息管理模块
-        * 第1
-        * 第2
-    * 第三
-    * 第四`,
-                maxColumn: 1,
-                maxRow: 0,
-                idIndex: 0,
+        * 第一
+        * 商品信息管理模块
+            * 第1
+            * 第2
+        * 第三
+        * 第四`,
                 data: {
                     value: '根目录',
                     children: [
@@ -98,6 +61,12 @@
                     menu: [
                         {
                             type: 'icon',
+                            icon: 'remove_red_eye',
+                            click: this.view,
+                            title: '查看'
+                        },
+                        {
+                            type: 'icon',
                             icon: 'file_download',
                             click: this.dowload,
                             title: '下载'
@@ -110,277 +79,46 @@
             this.init()
         },
         methods: {
-            convert(content) {
-                let arr = content.split('\n')
-                arr = arr.filter(line => line.replace(/\s/g, '').length)
-                let arr2 = []
-                for (let item of arr) {
-                    arr2.push({
-                        id: this.getId(),
-                        level: item.match(/^\s*/)[0].length / 4,
-                        content: item.replace(/^\s*\*\s*/, '')
-                    })
-                }
-                let root = null
-                let lastLevel = 0
-                let stack = []
-                for (let i = 0; i < arr2.length; i++) {
-                    let item = arr2[i]
-                    if (item.level === 0) {
-                        root = {
-                            id: item.id,
-                            value: item.content,
-                            children: []
-                        }
-                    } else {
-                        let lastItem = arr2[i - 1]
-                        if (item.level > lastItem.level) {
-                            if (item.level > this.maxColumn) {
-                                this.maxColumn = item.level
-                            }
-                            stack.push(lastItem)
-                            let top = stack[stack.length - 1]
-                            item.parent = top.id
-                        } else if (item.level === lastItem.level) {
-                            let top = stack[stack.length - 1]
-                            item.parent = top.id
-                        } else {
-                            while (stack.length > item.level) {
-                                stack.pop()
-                            }
-                            let top = stack[stack.length - 1]
-                            item.parent = top.id
-                        }
-                    }
-                }
-
-                for (let i = 0; i < arr2.length; i++) {
-                    let item = arr2[i]
-                    if (i > 0) {
-                        let node = this.getNode(root, item.parent)
-                        if (node) {
-                            node.children.push({
-                                id: item.id,
-                                value: item.content,
-                                children: []
-                            })
-                        }
-                    }
-                }
-                return root
-            },
-            getNode(node, id) {
-                if (node.id === id) {
-                    return node
-                }
-                if (node.children && node.children.length) {
-                    for (let i = 0; i < node.children.length; i++) {
-                        let n = this.getNode(node.children[i], id)
-                        if (n) {
-                            return n
-                        }
-                    }
-                } else {
-                }
-                return null
-            },
-            getId() {
-                return '' + this.idIndex++
-            },
             init() {
-                this.initEditor()
-                // this.preview()
+                this.preview()
             },
             preview() {
                 let svg = d3.select('svg')
                 this.svg = svg
                 svg.selectAll('*').remove()
-                this._yIndex = 0
-                this.maxRow = 0
-                this.maxColumn = 0
-                this.content = this.editor.getValue()
-                this.data = this.convert(this.content)
-                console.log(this.data)
-                this.calculate(this.data, 0)
-
-                let shapes = this._draw(svg, this.data, [])
-                if (!shapes) {
-                    return
-                }
-                let json = {
-                    version: '1.0.0',
-                    shapes: shapes
-                }
-                if (json) {
-                    draw(svg, json)
+                this.json = funtionDiagram.getJson(this.content)
+                console.log(this.json)
+                if (this.json) {
+                    draw(svg, this.json)
                 }
                 // set svg size
-                this.docWidth = (this.maxColumn + 1) * (140 + 32) + 16 * 2
-                this.docHeight = this.maxRow * (40 + 16) + 16 * 2
+                this.docWidth = (funtionDiagram.maxColumn + 1) * (140 + 32) + 16 * 2
+                this.docHeight = funtionDiagram.maxRow * (40 + 16) + 16 * 2
                 svg.attr('width', this.docWidth)
                     .attr('height', this.docHeight)
             },
-            initEditor() {
-                let editor = ace.edit('code')
-                this.editor = editor
-                // 设置风格和语言（更多风格和语言，请到github上相应目录查看）
-                let theme = 'clouds'
-                let language = 'markdown'
-                editor.setTheme('ace/theme/' + theme)
-                editor.session.setMode('ace/mode/' + language)
-                editor.setFontSize(18)
-                editor.setAutoScrollEditorIntoView(true)
-                editor.getSession().on('change', () => {
-                    this.preview()
-                })
-                // 自动换行,设置为off关闭
-                editor.setOption('wrap', 'free')
-                editor.setValue(this.content)
-                // 启用提示菜单
-                ace.require('ace/ext/language_tools')
-                editor.setOptions({
-                    enableBasicAutocompletion: true,
-                    enableSnippets: true,
-                    enableLiveAutocompletion: true
-                })
+            view() {
+                let data = JSON.stringify(this.json, null, 4)
 
-                editor.getSession().setUseSoftTabs(true)
-            },
-            calculate(node, x) {
-                if (!node) {
-                    return
-                }
-                let padding = 16
-                let width = 140
-                let height = 40
-                let offsetX = 32
-                let offsetY = 16
-
-                node._width = width
-                node._height = height
-                let y = 0
-                if (node.children && node.children.length) {
-                    for (let i = 0; i < node.children.length; i++) {
-                        this.calculate(node.children[i], x + 1)
-                    }
-                    node._y = (node.children[0]._y + node.children[node.children.length - 1]._y) / 2
-                } else {
-                    node._y = this._yIndex * (height + offsetY) + padding
-                    this._yIndex++
-                }
-                node._x = x * (width + offsetX) + padding
-            },
-            _draw(svg, node, retArr) {
-                let RECT_STYLE = {
-                    strokeColor: '#000',
-                    strokeWidth: 1,
-                    fillColor: 'none'
-                }
-                if (!node) {
-                    return
-                }
-                if (node.value) { // hack
-                    retArr.push({
-                        type: 'rect',
-                        x: node._x,
-                        y: node._y,
-                        width: node._width,
-                        height: node._height,
-                        style: RECT_STYLE,
-                        title: node.value
-                    })
-                }
-                retArr.push({
-                    type: 'text',
-                    text: node.value,
-                    x: node._x + node._width / 2,
-                    y: node._y + node._height / 2,
-                    width: node._width,
-                    height: node._height,
-                    style: {
-                        textAnchor: 'middle',
-                        dominantBaseline: 'middle'
-                    }
+                let intent = new Intent({
+                    action: 'http://webintent.yunser.com/view',
+                    type: 'application/json',
+                    data: data
                 })
-               
-                if (node.children && node.children.length) {
-                    for (let i = 0; i < node.children.length; i++) {
-                        this._draw(svg, node.children[i], retArr)
-                        // line
-                        let pt0 = {
-                            x: node._x + node._width,
-                            y: node._y + node._height / 2
-                        }
-                        let pt3 = {
-                            x: node.children[i]._x,
-                            y: node.children[i]._y + node._height / 2
-                        }
-                        let pt1 = {
-                            x: (pt0.x + pt3.x) / 2,
-                            y: pt0.y
-                        }
-                        let pt2 = {
-                            x: (pt0.x + pt3.x) / 2,
-                            y: pt3.y
-                        }
-                        let LINE_STYLE = {
-                            strokeColor: '#000',
-                            strokeWidth: 1
-                        }
-                        retArr.push({
-                            type: 'line',
-                            x1: pt0.x,
-                            y1: pt0.y,
-                            x2: pt1.x,
-                            y2: pt1.y,
-                            style: LINE_STYLE
-                        })
-                        retArr.push({
-                            type: 'line',
-                            x1: pt1.x,
-                            y1: pt1.y,
-                            x2: pt2.x,
-                            y2: pt2.y,
-                            style: LINE_STYLE
-                        })
-                        retArr.push({
-                            type: 'line',
-                            x1: pt2.x,
-                            y1: pt2.y,
-                            x2: pt3.x,
-                            y2: pt3.y,
-                            style: LINE_STYLE
-                        })
-                    }
-                } else {
-                    this.maxRow++
-                }
-                return retArr
+                navigator.startActivity(intent, () => {
+                    console.log('成功了')
+                }, data => {
+                    console.log('失败')
+                })
             },
             dowload() {
                 let html = document.getElementsByTagName('svg')[0].outerHTML
-                html = window.toUTF8(html)
-                let imgSrc = 'data:image/svg+xml;base64,' + btoa(html)
-                let img = new Image()
-                img.onload = () => {
-//                    let canvas = document.createElement('CANVAS')
-                    let canvas = document.getElementById('canvas')
-                    canvas.width = this.docWidth
-                    canvas.height = this.docHeight
-                    canvas.style.width = this.docWidth + 'px'
-                    canvas.style.height = this.docHeight + 'px'
-                    let myctx = canvas.getContext("2d")
-                    myctx.width = this.docWidth
-                    myctx.height = this.docHeight
-
-                    myctx.fillStyle = '#fff'
-                    myctx.fillRect(0, 0, this.docWidth, this.docHeight)
-                    myctx.drawImage(img, 0, 0, this.docWidth, this.docHeight, 0, 0, this.docWidth, this.docHeight)
-                    canvas.toBlob(blob => {
-                        saveAs(blob, this.data.value + '.png')
-                    })
-                }
-                img.src = imgSrc
+                download(html, this.docWidth, this.docHeight, this.data.value)
+            }
+        },
+        watch: {
+            content() {
+                this.preview()
             }
         }
     }
@@ -408,26 +146,6 @@
         svg {
             /*border: 1px solid #999;*/
         }
-    }
-</style>
-
-<style>
-    .editor {
-        width: 300px;
-        height: 300px;
-    }
-    .ace_editor {
-        height: 100%;
-    }
-    .ace_content {
-        height: 100%;
-    }
-    text {
-            /* stroke: #000; */
-            /* stroke-width: 1; */
-            /* font-size: 20px; */
-            /* text-anchor: middle;
-            dominant-baseline: middle; */
     }
 </style>
 

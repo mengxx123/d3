@@ -1,26 +1,16 @@
 <template>
     <my-page title="用例图">
         <div class="code-box">
-            <pre id="code" class="ace_editor" style="height100%; min-height:500px"><textarea class="ace_text-input">
-    ## 二级标题
-    > 引用
-
-    这是内容
-    ### 三级标题
-    **加粗**文字
-            </textarea></pre>
+            <ace-editor v-model="content" />
         </div>
         <div class="preview-box">
             <svg></svg>
         </div>
-        <textarea class="editor" v-model="content"></textarea>
     </my-page>
 </template>
 
 <script>
     /* eslint-disable */
-    const ace = window.ace
-
     export default {
         data () {
             return {
@@ -108,7 +98,6 @@ actor 销售员
                     useCases: [],
                     links: []
                 }
-                this.content = this.editor.getValue()
                 let arr = this.content.split('\n')
                 arr = arr.filter(value => {
                     return value.length
@@ -149,7 +138,6 @@ actor 销售员
                 }
             },
             init() {
-                this.initEditor()
                 this.preview()
             },
             preview() {
@@ -162,28 +150,6 @@ actor 销售员
                 this.convert()
                 this.calculate()
                 this.draw(svg, this.data)
-            },
-            initEditor() {
-                let editor = ace.edit('code')
-                this.editor = editor
-                let theme = 'clouds'
-                let language = 'markdown'
-                editor.setTheme('ace/theme/' + theme)
-                editor.session.setMode('ace/mode/' + language)
-                editor.setFontSize(18)
-                editor.setReadOnly(false)
-                editor.getSession().on('change', () => {
-                    this.preview()
-                })
-                editor.setOption('wrap', 'free')
-                editor.setValue(this.content)
-                editor.setOptions({
-                    enableBasicAutocompletion: true,
-                    enableSnippets: true,
-                    enableLiveAutocompletion: true
-                })
-
-                editor.getSession().setUseSoftTabs(true)
             },
             calculate() {
                 let max = Math.max(this.data.actors.length, this.data.useCases.length)
@@ -338,6 +304,11 @@ actor 销售员
                     .attr("y", y + 64)
                     .text(name)
             }
+        },
+        watch: {
+            content() {
+                this.preview()
+            }
         }
     }
 </script>
@@ -368,10 +339,6 @@ actor 销售员
 </style>
 
 <style>
-    .editor {
-        width: 300px;
-        height: 300px;
-    }
     text {
             /* stroke: #000; */
             /* stroke-width: 1; */
