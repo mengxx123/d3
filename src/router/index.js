@@ -10,6 +10,7 @@ const Draw = resolve => require(['@/views/Draw'], resolve)
 const Class = resolve => require(['@/views/Class'], resolve)
 const View = resolve => require(['@/views/View'], resolve)
 const ProcessOn = resolve => require(['@/views/ProcessOn'], resolve)
+const Help = resolve => require(['@/views/Help'], resolve)
 const About = resolve => require(['@/views/About'], resolve)
 const Error404 = resolve => require(['@/views/error/Error404'], resolve)
 
@@ -51,6 +52,10 @@ let routes = [
     {
         path: '/processOn',
         component: ProcessOn
+    },
+    {
+        path: '/help',
+        component: Help
     },
     {
         path: '/about',

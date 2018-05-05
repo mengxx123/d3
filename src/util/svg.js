@@ -27,8 +27,14 @@ function draw(svg, data) {
                 .attr('cx', shape.cx)
                 .attr('cy', shape.cy)
                 .attr('r', shape.r)
+        } else if (shape.type === 'ellipse') {
+            elem = svg.append('ellipse')
+                .attr('cx', shape.cx)
+                .attr('cy', shape.cy)
+                .attr('rx', shape.rx)
+                .attr('ry', shape.ry)
         }
-        if (shape.style) {
+        if (shape.style && elem) {
             if (shape.style.fillColor) {
                 elem.attr('fill', shape.style.fillColor)
             }

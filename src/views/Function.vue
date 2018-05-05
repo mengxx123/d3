@@ -20,13 +20,13 @@
         data () {
             return {
                 asd: '',
-                content: `* 根目录
+                content: `* 根节点
         * 第一
         * 商品信息管理模块
-            * 第1
-            * 第2
-        * 第三
-        * 第四`,
+            第1
+            第2
+        + 第三
+        - 第四`,
                 data: {
                     value: '根目录',
                     children: [
@@ -65,6 +65,12 @@
                             click: this.view,
                             title: '查看'
                         },
+                        // {
+                        //     type: 'icon',
+                        //     icon: 'build',
+                        //     click: this.comic,
+                        //     title: '漫画化'
+                        // },
                         {
                             type: 'icon',
                             icon: 'file_download',
@@ -114,6 +120,8 @@
             dowload() {
                 let html = document.getElementsByTagName('svg')[0].outerHTML
                 download(html, this.docWidth, this.docHeight, this.data.value)
+            },
+            comic() {
             }
         },
         watch: {
@@ -125,27 +133,5 @@
 </script>
 
 <style lang="scss" scoped>
-    .code-box {
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 50%;
-        background-color: #fff;
-        border-right: 1px solid #999;
-    }
-    .preview-box {
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: 50%;
-        padding: 16px;
-        background-color: #fff;
-        overflow: auto;
-        svg {
-            /*border: 1px solid #999;*/
-        }
-    }
 </style>
 

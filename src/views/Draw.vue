@@ -23,7 +23,7 @@ line 5 10 100 100
 rect 0 0 100 100
 circle 100 100 10
 ellipse 300 300 80 20
-text 哈哈哈 200 200
+text 哈哈哈 200 100
 for num from 1 to 8
     circle 100 100 num
 `,
@@ -160,6 +160,33 @@ for num from 1 to 8
                             }
                         })
                     }
+                    if (match = item.match(/ellipse\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/)) {
+                        shapes.push({
+                            type: 'ellipse',
+                            cx: match[1],
+                            cy: match[2],
+                            rx: match[3],
+                            ry: match[4],
+                            style: {
+                                fillColor: 'none',
+                                strokeColor: '#000',
+                                strokeWidth: 1
+                            }
+                        })
+                    }
+                    if (match = item.match(/text\s+([\w\W]+)\s+(\d+)\s+(\d+)/)) {
+                        console.log('添加文章')
+                        shapes.push({
+                            type: 'text',
+                            text: match[1],
+                            x: match[2],
+                            y: match[3],
+                            style: {
+                                textAnchor: 'middle',
+                                dominantBaseline: 'middle'
+                            }
+                        })
+                    }
                 }
                 return {
                     version: '1.0.0',
@@ -176,9 +203,8 @@ for num from 1 to 8
                 console.log('删除所有')
                 svg.selectAll('*').remove()
                 this._yIndex = 0
-                let content = this.editor.getValue()
                 try {
-                    let json = this.convert(content)
+                    let json = this.convert(this.content)
                     draw(svg, json)
                 } catch (e) {
                     console.error(e)
@@ -217,18 +243,3 @@ for num from 1 to 8
         }
     }
 </style>
-
-<style>
-    .editor {
-        width: 300px;
-        height: 300px;
-    }
-    text {
-            /* stroke: #000; */
-            /* stroke-width: 1; */
-            /* font-size: 20px; */
-            text-anchor: middle;
-            dominant-baseline: middle;
-    }
-</style>
-

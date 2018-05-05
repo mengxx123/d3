@@ -1,0 +1,22 @@
+.code-box {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 50%;
+    background-color: #fff;
+    border-right: 1px solid #999;
+}
+.preview-box {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 50%;
+    padding: 16px;
+    background-color: #fff;
+    overflow: auto;
+    svg {
+        /*border: 1px solid #999;*/
+    }
+}

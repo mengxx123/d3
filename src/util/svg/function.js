@@ -31,7 +31,7 @@ export default {
             arr2.push({
                 id: this.getId(),
                 level: item.match(/^\s*/)[0].length / 4,
-                content: item.replace(/^\s*\*\s*/, '')
+                content: item.replace(/^\s*[*\-+]\s*/, '')
             })
         }
         let root = null

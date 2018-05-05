@@ -261,6 +261,9 @@ actor 销售员
                 svg.append('text')
                     .attr('x', x)
                     .attr("y", y)
+                    .attr('text-anchor', 'middle')
+                    .attr('dominant-baseline', 'middle')
+                    .attr("y", y)
                     .text(name)
             },
             drawActor(svg, name, x, y) {
@@ -302,6 +305,8 @@ actor 销售员
                 svg.append('text')
                     .attr('x', x)
                     .attr("y", y + 64)
+                    .attr('text-anchor', 'middle')
+                    .attr('dominant-baseline', 'middle')
                     .text(name)
             }
         },
@@ -314,37 +319,4 @@ actor 销售员
 </script>
 
 <style lang="scss" scoped>
-    .code-box {
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 50%;
-        background-color: #fff;
-        border-right: 1px solid #999;
-    }
-    .preview-box {
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: 50%;
-        padding: 16px;
-        background-color: #fff;
-        overflow: auto;
-        svg {
-            /*border: 1px solid #999;*/
-        }
-    }
 </style>
-
-<style>
-    text {
-            /* stroke: #000; */
-            /* stroke-width: 1; */
-            /* font-size: 20px; */
-            text-anchor: middle;
-            dominant-baseline: middle;
-    }
-</style>
-

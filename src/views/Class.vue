@@ -135,7 +135,7 @@ class User {
                     svg.append('text')
                         .attr('x', cls._x + 16)
                         .attr("y", cls._y + HEADER_HEIGHT + (i + 0.5) * ATTRIBUTE_HEIGHT)
-                       .attr("text-anchor", 'middle')
+                    //    .attr("text-anchor", 'middle')
                         .attr('dominant-baseline', 'middle')
                         .text(attr)
                 }
