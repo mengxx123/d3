@@ -61,6 +61,13 @@
                     menu: [
                         {
                             type: 'icon',
+                            icon: 'help',
+                            href: 'https://project.yunser.com/products/7f21a690276611e9b95d1b467f10f6be',
+                            target: '_blank',
+                            title: '帮助'
+                        },
+                        {
+                            type: 'icon',
                             icon: 'remove_red_eye',
                             click: this.view,
                             title: '查看'

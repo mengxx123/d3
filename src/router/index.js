@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
+const Home = resolve => require(['@/views/Home'], resolve)
 const Function = resolve => require(['@/views/Function'], resolve)
 const UseCase = resolve => require(['@/views/UseCase'], resolve)
 const PlantUml = resolve => require(['@/views/PlantUml'], resolve)
@@ -19,6 +20,10 @@ Vue.use(Router)
 let routes = [
     {
         path: '/',
+        component: Home
+    },
+    {
+        path: '/function',
         component: Function
     },
     {
